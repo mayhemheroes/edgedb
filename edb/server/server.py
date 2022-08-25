@@ -1533,13 +1533,11 @@ class Server(ha_base.ClusterProtocol):
 
         return servers, port, addrs
 
-    def init_tls(
+    def load_tls(
         self,
         tls_cert_file,
         tls_key_file,
-        tls_cert_newly_generated,
     ):
-        assert self._sslctx is None
         tls_password_needed = False
 
         def _tls_private_key_password():
@@ -1591,15 +1589,22 @@ class Server(ha_base.ClusterProtocol):
 
         sslctx.set_alpn_protocols(['edgedb-binary', 'http/1.1'])
         self._sslctx = sslctx
+
+    def init_tls(
+        self,
+        tls_cert_file,
+        tls_key_file,
+        tls_cert_newly_generated,
+    ):
+        assert self._sslctx is None
+        self.load_tls(tls_cert_file, tls_key_file)
         self._tls_cert_file = str(tls_cert_file)
         self._tls_cert_newly_generated = tls_cert_newly_generated
 
-    def init_jwcrypto(
+    def load_jwcrypto(
         self,
         jws_key_file: pathlib.Path,
         jwe_key_file: pathlib.Path,
-        jws_keys_newly_generated: bool,
-        jwe_keys_newly_generated: bool,
     ) -> None:
         try:
             with open(jws_key_file, 'rb') as kf:
@@ -1628,6 +1633,15 @@ class Server(ha_base.ClusterProtocol):
             raise StartupError(
                 f"the provided JWE key file does not "
                 f"contain a valid RSA or EC private key")
+
+    def init_jwcrypto(
+        self,
+        jws_key_file: pathlib.Path,
+        jwe_key_file: pathlib.Path,
+        jws_keys_newly_generated: bool,
+        jwe_keys_newly_generated: bool,
+    ) -> None:
+        self.load_jwcrypto(jws_key_file, jwe_key_file)
         self._jws_keys_newly_generated = jws_keys_newly_generated
         self._jwe_keys_newly_generated = jwe_keys_newly_generated
 
