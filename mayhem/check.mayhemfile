@@ -1,0 +1,7 @@
+project: edgedb
+target: check
+
+cmds:
+  - cmd: /check
+  - cmd: /check_no_inst @@
+    libfuzzer: false
